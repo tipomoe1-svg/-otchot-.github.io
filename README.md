@@ -271,3 +271,211 @@
          ];
          createApp({
              setup() {
+             const players = ref([{ id: generateId(), name: '', playerId:'', type:'kitten' }]);
+                const gameSessions = ref([createGameSession()]);
+                const gameReport = computed(() => {
+                    const lines = [];
+                    lines.push(`Следи`: ID следующего | [catID]`);
+                    lines.push(`Игровик`: ID Игровика | [catID]`);
+                    lines.push(`Время`: время начала игры - время конца игры; ${new Date().getDate().toString().padStart(2, '0')}.${(new Date().getMonth() + 1).toString().padStart(2, '0')}.${new Date().getFullYear().toString().slice(-2)}`);   
+                    // Игры
+                    const gameLines = [];
+                    gameSessions.value.forEach(session => {
+                        if (session.selectedGame) {
+                            const minRounds = session.selectedGame.rounds;
+                            const playedRounds = session.rounds.length;
+                            const gameCount = Math.floor(playedRounds / minRounds);
+                            if (gameCount > 0) {
+                                gameLines.push(`${session.selectedGame.name} (${gameCount})`);
+                            }
+                        }
+                    });
+                    lines.push(`Игра`: ${gameLines.join(', ')}`);   
+                    // Котята
+                    lines.push(`Котята`:);
+                    const adultPoints = {};
+                    const kittenPoints = {}; 
+                    // Собираем баллы взрослых для распределения
+                    gameSessions.value.forEach(session => {
+                        if (session.selectedGame) {
+                            session.rounds.forEach(round => {
+                                const adultPlayersInRound = players.value.filter(p => p.type === 'adult' && (round.points[p.id] || 0) > 0);
+                                const kittenPlayersInRound = players.value.filter(p => (p.type === 'kitten' || p.type === 'bs' || p.type === 'is') && (round.points[p.id] || 0) > 0); 
+                                if (adultPlayersInRound.length > 0 && kittenPlayersInRound.length > 0) {
+                                    adultPlayersInRound.forEach(adult => {
+                                        const pointsToDistribute = round.points[adult.id] || 0;
+                                        const pointsPerKitten = Math.floor(pointsToDistribute / kittenPlayersInRound.length);
+                                                                                kittenPlayersInRound.forEach(kitten => {
+                                            kittenPoints[kitten.id] = (kittenPoints[kitten.id] || 0) + pointsPerKitten;
+                                        });
+                                    });
+                        
+// Обычные баллы
+                                players.value.forEach(player => {
+                                    if (player.type !== 'adult' || kittenPlayersInRound.length === 0) {
+                                        const points = round.points[player.id] || 0;
+                                        if (player.type === 'adult') {
+                                            adultPoints[player.id] = (adultPoints[player.id] || 0) + points;
+                                        } else {
+                                            kittenPoints[player.id] = (kittenPoints[player.id] || 0) + points;
+                                        }
+                                    }
+                                });
+                            });
+                        }
+                    });
+                    // Формируем строки для игроков
+                    players.value.forEach(player => {
+                        if (player.type !== 'adult') {
+                            const totalPoints = kittenPoints[player.id] || 0;
+                            const catID = player.playerId ? `cat${player.playerId}` : 'catID';   
+                            if (player.type === 'bs') {
+                                lines.push(`${player.playerId || 'ID'} | [${catID}] (${totalPoints}) [БС]`);
+                            } else if (player.type === 'is') {
+                                let visitedGames = 0;
+                                gameSessions.value.forEach(session => {
+                                    if (session.selectedGame) {
+                                        const playerRounds = session.rounds.filter(round => (round.points[player.id] || 0) > 0).length;
+                                        const gameCount = Math.floor(playerRounds / session.selectedGame.rounds);
+                                        visitedGames += gameCount;
+                                    }
+                                });
+                                lines.push(`${player.playerId || 'ID'} | [${catID}] (${totalPoints}; ${visitedGames}) [ИС]`);
+                            } else {
+                                lines.push(`${player.playerId || 'ID'} | [${catID}] (${totalPoints})`);
+                            }
+                        }
+                    });
+                    return lines.join('\n');
+                });
+                function generateId() {
+                    return Date.now().toString(36) + Math.random().toString(36).substr(2);
+                }
+                function addPlayer() {
+                    players.value.push({ 
+                        id: generateId(), 
+                        name:'', 
+                        playerId:'', 
+                        type:'kitten' 
+                    });
+                }
+                function removePlayer(index) {
+                    if (players.value.length > 1) {
+                        const removedPlayer = players.value.splice(index, 1)[0]; 
+                        // Удаляем баллы удалённого игрока из всех игр
+                        gameSessions.value.forEach(gameSession => {
+                            gameSession.rounds.forEach(round => {
+                                if (round.points[removedPlayer.id] !== undefined) {
+                                    delete round.points[removedPlayer.id];
+                                }
+                            });
+                        });
+                    }
+                }
+                function createGameSession() {
+                    return {
+                        id : generateId(),
+                        searchQuery : '',
+                        selectedGame : null,
+                        filteredGames : [],
+                        showSuggestions : false,
+                        rounds : []
+                    };
+                }
+                function addGameSession() {
+                    gameSessions.value.push(createGameSession());
+                }
+                function removeGameSession(index) {
+                    if (gameSessions.value.length > 1) {
+                        gameSessions.value.splice(index, 1);
+                    }
+                }
+                 function getAvailableGames() {
+                     const soloPlayers = players.value.length === 1;
+                     return games.filter(game => 
+                         (!game.solo && soloPlayers) ? false :
+                         (game.solo && !soloPlayers) ? false :
+                         true
+                     );
+                 }
+                 function filterGames(sessionIndex) {
+                     const session = gameSessions.value[sessionIndex];
+                     const query = session.searchQuery.toLowerCase();
+                     session.filteredGames = getAvailableGames().filter(game => 
+                         game.name.toLowerCase().includes(query)
+                     );
+                 }
+                 function selectGame(sessionIndex, game) {
+                     const session = gameSessions.value[sessionIndex];
+                     session.selectedGame = game;
+                     session.searchQuery = game.name;
+                     session.showSuggestions = false;
+                     // Создаём раунды
+                     session.rounds = [];
+                     for (let i = 0; i < game.rounds; i++) {
+                         session.rounds.push({
+                             points : {}
+                         });
+                     }
+                 }
+                 function removeRound(sessionIndex) {
+                     const session = gameSessions.value[sessionIndex];
+                     if (session.rounds.length > 1) {
+                         session.rounds.pop();
+                     }
+                 }
+                 function addRound(sessionIndex) {
+                     const session = gameSessions.value[sessionIndex];
+                     if (session.selectedGame) {
+                         session.rounds.push({
+                             points : {}
+                         });
+                     }
+                 }
+                 function addCustomRounds(sessionIndex) {
+                     const session = gameSessions.value[sessionIndex];
+                     if (session.selectedGame) {
+                         const count = parseInt(prompt('Сколько раундов добавить?', '1'));
+                         if (count > 0) {
+                             for (let i = 0; i < count; i++) {
+                                 session.rounds.push({
+                                     points : {}
+                                 });
+                             }
+                         }
+                     }
+                 }
+                 function filteredPlayers(gameSession) {
+                     if (!gameSession.selectedGame) return players.value;
+                     if (!gameSession.selectedGame.adults) {
+                         return players.value.filter(player => player.type !== 'adult');
+                     }
+                     return players.value;
+                 }
+                 document.addEventListener('click', (e) => {
+                     if (!e.target.matches('input')) {
+                         gameSessions.value.forEach(session => {
+                             session.showSuggestions = false;
+                         });
+                     }
+                 });
+                 return {
+                     players,
+                     gameSessions,
+                     gameReport,
+                     addPlayer,
+                     removePlayer,
+                     addGameSession,
+                     removeGameSession,
+                     filterGames,
+                     selectGame,
+                     removeRound,
+                     addRound,
+                     addCustomRounds,
+                     filteredPlayers
+                 };
+             }
+         }).mount('#app');
+     </script>
+ </body>
+</html>
