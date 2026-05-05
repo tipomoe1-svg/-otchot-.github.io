@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -25,17 +26,7 @@
         a { text-decoration: none; font-weight: bold; color: #f0f0f0 }
         h4 { margin-bottom: 10px; }
         h2 { margin-top: 10px; }
-        input, select { background-color: #38373b !important; border-color:#f0f0f0 !important;
-            padding: 3px !important;
-            color:#f0f0f0 !important;
-            border-radius:3px !important;
-            box-shadow:none !important;
-            outline:none !important;
-            width:max-content;
-            min-width:max-content;
-            max-width:max-content;
-            flex-grow :1;
-         }
+        input { background-color: #38373b; border: #f0f0f0 1px solid; padding: 3px; color: #f0f0f0; }
     </style>
 </head>
 <body>
@@ -47,6 +38,7 @@
                 <div v-for="(player, index) in players" :key="player.id" class="player-row">
                     <input v-model="player.name" placeholder="Имя игрока">
                     <input v-model="player.playerId" placeholder="ID игрока">
+                    
                     <label>
                         <input type="radio" v-model="player.type" value="kitten"> Котёнок
                     </label>
@@ -59,10 +51,12 @@
                     <label>
                         <input type="radio" v-model="player.type" value="adult"> Взрослый
                     </label>
+                    
                     <button @click="removePlayer(index)" class="delete-btn" :disabled="players.length === 1">Удалить</button>
                 </div>
                 <button @click="addPlayer" class="add-btn">+ Добавить игрока</button>
             </div>
+
             <!-- Блок игр -->
             <div class="section">
                 <h2>Игры</h2>
@@ -88,19 +82,20 @@
                         </div>
                         <button @click="removeGameSession(index)" class="delete-btn" :disabled="gameSessions.length === 1">Удалить игру</button>
                     </div>
-               <!-- Раунды -->
+
+                    <!-- Раунды -->
                     <div v-if="gameSession.selectedGame" class="rounds-list">
                         <div v-for="(round, roundIndex) in gameSession.rounds" :key="roundIndex" class="round-item">
                             <h4>Раунд {{ roundIndex + 1 }}</h4>
                             <div class="player-points">
                                 <div v-for="player in filteredPlayers(gameSession)" :key="player.id" class="player-point-row">
                                     <span>{{ player.name }}</span>
-                                    <select v-if="gameSession.selectedGame.points.length" v-model.number="round.points[player.id] || 0">
+                                    <select v-if="gameSession.selectedGame.points.length" v-model="round.points[player.id]">
                                         <option v-for="point in [...gameSession.selectedGame.points, 0]" :key="point" :value="point">
                                             {{ point }}
                                         </option>
                                     </select>
-                                    <input v-else type="number" v-model.number="round.points[player.id] || 0" placeholder="Баллы">
+                                    <input v-else type="number" v-model.number="round.points[player.id]" placeholder="Баллы">
                                 </div>
                             </div>
                         </div>
@@ -113,171 +108,171 @@
                 </div>
                 <button @click="addGameSession" class="add-btn">+ Добавить игру</button>
             </div>
-            <!-- Отчёт -->
             <div class="section">
                 <h2>Отчёт об играх</h2>
-                <textarea v-model.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal= "gameReport" rows="15" style="width: 100%; font-family: monospace;" readonly placeholder="Отчёт будет сгенерирован автоматически"></textarea>
+                <textarea v-model="gameReport" rows="10" style="width: 100%;" placeholder="Отчёт будет сгенерирован автоматически"></textarea>
             </div>
-            <!-- Ссылка (для GitHub Pages) -->
-            <a href="#" id = "link-to-main">НА ГЛАВНУЮ</a> 
+            <div id = "link-to-main"><a href = "../">НА ГЛАВНУЮ</a></div>
         </div>
     </div>
+
     <script>
-        const { createApp, ref, computed } = Vue;
+        const { createApp, ref, computed, watch } = Vue;
+
         const games = [
-            // ... (весь список игр из твоего кода)
-            // Я оставил их без изменений, чтобы не раздувать ответ.
-            // Просто скопируй их отсюда или из своего файла.
             {
-                name:"Путаница",
-                solo:false,
-                adults:true,
-                points:[7,3],
-                rounds:5
+                name: "Путаница",
+                solo: false,
+                adults: true,
+                points: [],
+                rounds: 5
             },
             {
-                name:"Догонялки",
-                solo:false,
-                adults:false,
-                points:[7,3],
-                rounds:3
+                name: "Догонялки",
+                solo: false,
+                adults: false,
+                points: [7, 3],
+                rounds: 3
             },
-             {
-                name:"Викторина",
-                solo:false,
-                adults:true,
-                points:[4,2],
-                rounds:5
-             },
-             {
-                 name:"Котячий патруль",
-                 solo:true,
-                 adults:true,
-                 points:[10,5],
-                 rounds:1
-             },
-             {
-                 name:"Поле чудес",
-                 solo:false,
-                 adults:true,
-                 points:[10,5],
-                 rounds:3
-             },
-             {
-                 name:"Липучки",
-                 solo:false,
-                 adults:false,
-                 points:[4,2],
-                 rounds:3
-             },
-             {
-                 name:"Составь слово",
-                 solo:false,
-                 adults:false,
-                 points:[4,2],
-                 rounds:5
-             },
-             {
-                 name:"Расшифруй",
-                 solo:true,
-                 adults:true,
-                 points:[4,2],
-                 rounds:5
-             },
-             {
-                 name:"Займи клетку",
-                 solo:false,
-                 adults:true,
-                 points:[5,3],
-                 rounds:5
-             },
-             {
-                 name:"Погоня",
-                 solo:false,
-                 adults:false,
-                 points:[5,3],
-                 rounds:3
-             },
-             {
-                 name:"Облом",
-                 solo:false,
-                 adults:false,
-                 points:[4,1],
-                 rounds:5
-             },
-             {
-                 name:"Лабиринт",
-                 solo:true,
-                 adults:true,
-                 points:[5,3,1],
-                 rounds:3
-             },
-             {
-                  name:"Охота на бабочек",
-                  solo:true,
-                  adults:false,
-                  points:[5,3],
-                  rounds:1
-              },
-              {
-                  name:"Три буквы",
-                  solo:false,
-                  adults:true,
-                  points:[3,1],
-                  rounds:5
-              },
-              {
-                  name:"Клановое имя",
-                  solo:true,
-                  adults:true,
-                  points:[5,3],
-                  rounds:5
-              },
-              {
-                  name:"Цель",
-                  solo:true,
-                  adults:false,
-                  points:[5,3,1],
-                  rounds:3
-              },
-              {
-                  name:"Словарик",
-                  solo:true,
-                  adults:false,
-                  points:[4],
-                  rounds:5
-              },
-              {
-                  name:"Песочница",
-                  solo:true,
-                  adults:true,
-                  points:[4],
-                  rounds:1
-              },
-              {
-                   name:"Три факта",
-                   solo:false,
-                   adults:true,
-                   points:[5,3],
-                   rounds:3
-               },
-               {
-                   name:"Дай пять",
-                   solo:false,
-                   adults:true,
-                   points:[5,3],
-                   rounds:3
-               }
-         ];
-         createApp({
-             setup() {
-             const players = ref([{ id: generateId(), name: '', playerId:'', type:'kitten' }]);
+            {
+                name: "Викторина",
+                solo: false,
+                adults: true,
+                points: [4, 2],
+                rounds: 5
+            },
+            {
+                name: "Котячий патруль",
+                solo: true,
+                adults: true,
+                points: [10, 5],
+                rounds: 1
+            },
+            {
+                name: "Поле чудес",
+                solo: false,
+                adults: true,
+                points: [10, 5],
+                rounds: 3
+            },
+            {
+                name: "Липучки",
+                solo: false,
+                adults: false,
+                points: [4, 2],
+                rounds: 3
+            },
+            {
+                name: "Составь слово",
+                solo: false,
+                adults: false,
+                points: [4, 2],
+                rounds: 5
+            },
+            {
+                name: "Расшифруй",
+                solo: true,
+                adults: true,
+                points: [],
+                rounds: 5
+            },
+            {
+                name: "Займи клетку",
+                solo: false,
+                adults: true,
+                points: [5, 3],
+                rounds: 5
+            },
+            {
+                name: "Погоня",
+                solo: false,
+                adults: false,
+                points: [5, 3],
+                rounds: 3
+            },
+            {
+                name: "Облом",
+                solo: false,
+                adults: false,
+                points: [4, 1],
+                rounds: 5
+            },
+            {
+                name: "Лабиринт",
+                solo: true,
+                adults: true,
+                points: [5, 3, 1],
+                rounds: 3
+            },
+            {
+                name: "Охота на бабочек",
+                solo: true,
+                adults: false,
+                points: [],
+                rounds: 1
+            },
+            {
+                name: "Три буквы",
+                solo: false,
+                adults: true,
+                points: [3, 1],
+                rounds: 5
+            },
+            {
+                name: "Клановое имя",
+                solo: true,
+                adults: true,
+                points: [5, 3],
+                rounds: 5
+            },
+            {
+                name: "Цель",
+                solo: true,
+                adults: false,
+                points: [5, 3, 1],
+                rounds: 3
+            },
+            {
+                name: "Словарик",
+                solo: true,
+                adults: false,
+                points: [4],
+                rounds: 5
+            },
+            {
+                name: "Песочница",
+                solo: true,
+                adults: true,
+                points: [],
+                rounds: 1
+            },
+            {
+                name: "Три факта",
+                solo: false,
+                adults: true,
+                points: [5, 3],
+                rounds: 3
+            },
+            {
+                name: "Дай пять",
+                solo: false,
+                adults: true,
+                points: [],
+                rounds: 3
+            }
+        ];
+
+        createApp({
+            setup() {
+                const players = ref([{ id: generateId(), name: '', isAdult: false }]);
                 const gameSessions = ref([createGameSession()]);
                 const gameReport = computed(() => {
                     const lines = [];
-                    lines.push(`Следи`: ID следующего | [catID]`);
-                    lines.push(`Игровик`: ID Игровика | [catID]`);
-                    lines.push(`Время`: время начала игры - время конца игры; ${new Date().getDate().toString().padStart(2, '0')}.${(new Date().getMonth() + 1).toString().padStart(2, '0')}.${new Date().getFullYear().toString().slice(-2)}`);   
+                    
+                    lines.push(`Следил: ID следящего | [catID]`);
+                    lines.push(`Игровик: ID Игровика | [catID]`);
+                    lines.push(`Время: время начала игр - время конца игр; ${new Date().getDate().toString().padStart(2, '0')}.${(new Date().getMonth() + 1).toString().padStart(2, '0')}.${new Date().getFullYear().toString().slice(-2)}`);
+                    
                     // Игры
                     const gameLines = [];
                     gameSessions.value.forEach(session => {
@@ -290,27 +285,33 @@
                             }
                         }
                     });
-                    lines.push(`Игра`: ${gameLines.join(', ')}`);   
+                    lines.push(`Игра: ${gameLines.join(', ')}`);
+                    
                     // Котята
-                    lines.push(`Котята`:);
+                    lines.push(`Котята:`);
+                    
                     const adultPoints = {};
-                    const kittenPoints = {}; 
+                    const kittenPoints = {};
+                    
                     // Собираем баллы взрослых для распределения
                     gameSessions.value.forEach(session => {
                         if (session.selectedGame) {
                             session.rounds.forEach(round => {
-                                const adultPlayersInRound = players.value.filter(p => p.type === 'adult' && (round.points[p.id] || 0) > 0);
-                                const kittenPlayersInRound = players.value.filter(p => (p.type === 'kitten' || p.type === 'bs' || p.type === 'is') && (round.points[p.id] || 0) > 0); 
+                                const adultPlayersInRound = players.value.filter(p => p.type === 'adult' && round.points[p.id] > 0);
+                                const kittenPlayersInRound = players.value.filter(p => (p.type === 'kitten' || p.type === 'bs' || p.type === 'is') && round.points[p.id] > 0);
+                                
                                 if (adultPlayersInRound.length > 0 && kittenPlayersInRound.length > 0) {
                                     adultPlayersInRound.forEach(adult => {
                                         const pointsToDistribute = round.points[adult.id] || 0;
                                         const pointsPerKitten = Math.floor(pointsToDistribute / kittenPlayersInRound.length);
-                                                                                kittenPlayersInRound.forEach(kitten => {
+                                        
+                                        kittenPlayersInRound.forEach(kitten => {
                                             kittenPoints[kitten.id] = (kittenPoints[kitten.id] || 0) + pointsPerKitten;
                                         });
                                     });
-                        
-// Обычные баллы
+                                }
+                                
+                                // Обычные баллы
                                 players.value.forEach(player => {
                                     if (player.type !== 'adult' || kittenPlayersInRound.length === 0) {
                                         const points = round.points[player.id] || 0;
@@ -324,18 +325,20 @@
                             });
                         }
                     });
+                    
                     // Формируем строки для игроков
                     players.value.forEach(player => {
                         if (player.type !== 'adult') {
                             const totalPoints = kittenPoints[player.id] || 0;
-                            const catID = player.playerId ? `cat${player.playerId}` : 'catID';   
+                            const catID = player.playerId ? `cat${player.playerId}` : 'catID';
+                            
                             if (player.type === 'bs') {
                                 lines.push(`${player.playerId || 'ID'} | [${catID}] (${totalPoints}) [БС]`);
                             } else if (player.type === 'is') {
                                 let visitedGames = 0;
                                 gameSessions.value.forEach(session => {
                                     if (session.selectedGame) {
-                                        const playerRounds = session.rounds.filter(round => (round.points[player.id] || 0) > 0).length;
+                                        const playerRounds = session.rounds.filter(round => round.points[player.id] > 0).length;
                                         const gameCount = Math.floor(playerRounds / session.selectedGame.rounds);
                                         visitedGames += gameCount;
                                     }
@@ -346,23 +349,28 @@
                             }
                         }
                     });
+                    
                     return lines.join('\n');
                 });
+
                 function generateId() {
                     return Date.now().toString(36) + Math.random().toString(36).substr(2);
                 }
+
                 function addPlayer() {
                     players.value.push({ 
                         id: generateId(), 
-                        name:'', 
-                        playerId:'', 
-                        type:'kitten' 
+                        name: '', 
+                        playerId: '',
+                        type: 'kitten' // 'kitten', 'bs', 'is', 'adult'
                     });
                 }
+
                 function removePlayer(index) {
                     if (players.value.length > 1) {
-                        const removedPlayer = players.value.splice(index, 1)[0]; 
-                        // Удаляем баллы удалённого игрока из всех игр
+                        const removedPlayer = players.value.splice(index, 1)[0];
+                        
+                        // Удаляем баллы удаленного игрока из всех игр
                         gameSessions.value.forEach(gameSession => {
                             gameSession.rounds.forEach(round => {
                                 if (round.points[removedPlayer.id] !== undefined) {
@@ -372,110 +380,145 @@
                         });
                     }
                 }
+
                 function createGameSession() {
                     return {
-                        id : generateId(),
-                        searchQuery : '',
-                        selectedGame : null,
-                        filteredGames : [],
-                        showSuggestions : false,
-                        rounds : []
+                        id: generateId(),
+                        searchQuery: '',
+                        selectedGame: null,
+                        filteredGames: [],
+                        showSuggestions: false,
+                        rounds: []
                     };
                 }
+
                 function addGameSession() {
                     gameSessions.value.push(createGameSession());
                 }
+
                 function removeGameSession(index) {
                     if (gameSessions.value.length > 1) {
                         gameSessions.value.splice(index, 1);
                     }
                 }
-                 function getAvailableGames() {
-                     const soloPlayers = players.value.length === 1;
-                     return games.filter(game => 
-                         (!game.solo && soloPlayers) ? false :
-                         (game.solo && !soloPlayers) ? false :
-                         true
-                     );
-                 }
-                 function filterGames(sessionIndex) {
-                     const session = gameSessions.value[sessionIndex];
-                     const query = session.searchQuery.toLowerCase();
-                     session.filteredGames = getAvailableGames().filter(game => 
-                         game.name.toLowerCase().includes(query)
-                     );
-                 }
-                 function selectGame(sessionIndex, game) {
-                     const session = gameSessions.value[sessionIndex];
-                     session.selectedGame = game;
-                     session.searchQuery = game.name;
-                     session.showSuggestions = false;
-                     // Создаём раунды
-                     session.rounds = [];
-                     for (let i = 0; i < game.rounds; i++) {
-                         session.rounds.push({
-                             points : {}
-                         });
-                     }
-                 }
-                 function removeRound(sessionIndex) {
-                     const session = gameSessions.value[sessionIndex];
-                     if (session.rounds.length > 1) {
-                         session.rounds.pop();
-                     }
-                 }
-                 function addRound(sessionIndex) {
-                     const session = gameSessions.value[sessionIndex];
-                     if (session.selectedGame) {
-                         session.rounds.push({
-                             points : {}
-                         });
-                     }
-                 }
-                 function addCustomRounds(sessionIndex) {
-                     const session = gameSessions.value[sessionIndex];
-                     if (session.selectedGame) {
-                         const count = parseInt(prompt('Сколько раундов добавить?', '1'));
-                         if (count > 0) {
-                             for (let i = 0; i < count; i++) {
-                                 session.rounds.push({
-                                     points : {}
-                                 });
-                             }
-                         }
-                     }
-                 }
-                 function filteredPlayers(gameSession) {
-                     if (!gameSession.selectedGame) return players.value;
-                     if (!gameSession.selectedGame.adults) {
-                         return players.value.filter(player => player.type !== 'adult');
-                     }
-                     return players.value;
-                 }
-                 document.addEventListener('click', (e) => {
-                     if (!e.target.matches('input')) {
-                         gameSessions.value.forEach(session => {
-                             session.showSuggestions = false;
-                         });
-                     }
-                 });
-                 return {
-                     players,
-                     gameSessions,
-                     gameReport,
-                     addPlayer,
-                     removePlayer,
-                     addGameSession,
-                     removeGameSession,
-                     filterGames,
-                     selectGame,
-                     removeRound,
-                     addRound,
-                     addCustomRounds,
-                     filteredPlayers
-                 };
-             }
-         }).mount('#app');
-     </script>
- </body>
+
+                function filterGames(sessionIndex) {
+                    const session = gameSessions.value[sessionIndex];
+                    const query = session.searchQuery.toLowerCase();
+                    
+                    session.filteredGames = getAvailableGames().filter(game => 
+                        game.name.toLowerCase().includes(query)
+                    );
+                }
+
+                // function getAvailableGames() {
+                //     const soloPlayers = players.value.length === 1;
+                //     const soloAdultPlayer = soloPlayers && players.value[0].isAdult;
+                //     const allAdultPlayers = players.value.length > 0 && players.value.every(p => p.isAdult);
+                //     const hasNonAdultPlayers = players.value.some(p => !p.isAdult);
+
+                //     return games.filter(game => {
+                //         // Solo игры доступны ТОЛЬКО когда игрок один
+                //         // Не-solo игры доступны ТОЛЬКО когда игроков больше одного
+                //         if ((game.solo && !soloPlayers) || (!game.solo && soloPlayers)) {
+                //             return false;
+                //         }
+
+                //         // Игры ТОЛЬКО для не-взрослых (adults: false) - скрываем если:
+                //         // - есть взрослые игроки
+                //         if (!game.adults && !hasNonAdultPlayers) {
+                //             return false;
+                //         }
+
+                //         return true;
+                //     });
+                // }
+
+                function getAvailableGames() {
+                    return games;
+                }
+
+                function selectGame(sessionIndex, game) {
+                    const session = gameSessions.value[sessionIndex];
+                    session.selectedGame = game;
+                    session.searchQuery = game.name;
+                    session.showSuggestions = false;
+                    
+                    // Создаем раунды
+                    session.rounds = [];
+                    for (let i = 0; i < game.rounds; i++) {
+                        session.rounds.push({
+                            points: {}
+                        });
+                    }
+                }
+
+                function removeRound(sessionIndex) {
+                    const session = gameSessions.value[sessionIndex];
+                    if (session.rounds.length > 1) {
+                        session.rounds.pop();
+                    }
+                }
+
+                function addRound(sessionIndex) {
+                    const session = gameSessions.value[sessionIndex];
+                    if (session.selectedGame) {
+                        session.rounds.push({
+                            points: {}
+                        });
+                    }
+                }
+
+                function addCustomRounds(sessionIndex) {
+                    const session = gameSessions.value[sessionIndex];
+                    if (session.selectedGame) {
+                        const count = parseInt(prompt('Сколько раундов добавить?', '1'));
+                        if (count > 0) {
+                            for (let i = 0; i < count; i++) {
+                                session.rounds.push({
+                                    points: {}
+                                });
+                            }
+                        }
+                    }
+                }
+
+                function filteredPlayers(gameSession) {
+                    if (!gameSession.selectedGame) return players.value;
+                    
+                    if (!gameSession.selectedGame.adults) {
+                        return players.value.filter(player => !player.isAdult);
+                    }
+                    
+                    return players.value;
+                }
+
+                // Закрываем подсказки при клике вне поля поиска
+                document.addEventListener('click', (e) => {
+                    if (!e.target.matches('input')) {
+                        gameSessions.value.forEach(session => {
+                            session.showSuggestions = false;
+                        });
+                    }
+                });
+
+                return {
+                    players,
+                    gameSessions,
+                    gameReport,
+                    addPlayer,
+                    removePlayer,
+                    addGameSession,
+                    removeGameSession,
+                    filterGames,
+                    selectGame,
+                    removeRound,
+                    addRound,
+                    addCustomRounds,
+                    filteredPlayers
+                };
+            }
+        }).mount('#app');
+    </script>
+</body>
 </html>
