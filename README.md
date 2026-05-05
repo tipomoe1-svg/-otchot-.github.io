@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -63,209 +64,208 @@
                 </div>
                 <button @click="addPlayer" class="add-btn">+ Добавить игрока</button>
             </div>
-
-            <!-- Блок игр -->
-            <div class="section">
-                <h2>Игры</h2>
-                <div v-for="(gameSession, index) in gameSessions" :key="gameSession.id" class="game-section">
-                    <div class="game-row">
-                        <div class="search-container">
-                            <input 
-                                v-model="gameSession.searchQuery" 
-                                @input="filterGames(index)"
-                                @focus="gameSession.showSuggestions = true"
-                                placeholder="Поиск..."
+                    <!-- Блок игр -->
+        <div class="section">
+            <h2>Игры</h2>
+            <div v-for="(gameSession, index) in gameSessions" :key="gameSession.id" class="game-section">
+                <div class="game-row">
+                    <div class="search-container">
+                        <input 
+                            v-model="gameSession.searchQuery" 
+                            @input="filterGames(index)"
+                            @focus="gameSession.showSuggestions = true"
+                            placeholder="Поиск..."
+                        >
+                        <div v-if="gameSession.showSuggestions && gameSession.filteredGames.length" class="suggestions">
+                            <div 
+                                v-for="game in gameSession.filteredGames" 
+                                :key="game.name"
+                                @click="selectGame(index, game)"
+                                class="suggestion-item"
                             >
-                            <div v-if="gameSession.showSuggestions && gameSession.filteredGames.length" class="suggestions">
-                                <div 
-                                    v-for="game in gameSession.filteredGames" 
-                                    :key="game.name"
-                                    @click="selectGame(index, game)"
-                                    class="suggestion-item"
-                                >
-                                    {{ game.name }}
-                                </div>
+                                {{ game.name }}
                             </div>
                         </div>
-                        <button @click="removeGameSession(index)" class="delete-btn" :disabled="gameSessions.length === 1">Удалить игру</button>
                     </div>
+                    <button @click="removeGameSession(index)" class="delete-btn" :disabled="gameSessions.length === 1">Удалить игру</button>
+                </div>
 
-                    <!-- Раунды -->
-                    <div v-if="gameSession.selectedGame" class="rounds-list">
-                        <div v-for="(round, roundIndex) in gameSession.rounds" :key="roundIndex" class="round-item">
-                            <h4>Раунд {{ roundIndex + 1 }}</h4>
-                            <div class="player-points">
-                                <div v-for="player in filteredPlayers(gameSession)" :key="player.id" class="player-point-row">
-                                    <span>{{ player.name }}</span>
-                                    <select v-if="gameSession.selectedGame.points.length" v-model.number="round.points[player.id] || 0">
-                                        <option v-for="point in [...gameSession.selectedGame.points, 0]" :key="point" :value="point">
-                                            {{ point }}
-                                        </option>
-                                    </select>
-                                    <input v-else type="number" v-model.number="round.points[player.id] || 0" placeholder="Баллы">
-                                </div>
+                <!-- Раунды -->
+                <div v-if="gameSession.selectedGame" class="rounds-list">
+                    <div v-for="(round, roundIndex) in gameSession.rounds" :key="roundIndex" class="round-item">
+                        <h4>Раунд {{ roundIndex + 1 }}</h4>
+                        <div class="player-points">
+                            <div v-for="player in filteredPlayers(gameSession)" :key="player.id" class="player-point-row">
+                                <span>{{ player.name }}</span>
+                                <select v-if="gameSession.selectedGame.points.length" v-model.number="round.points[player.id] || 0">
+                                    <option v-for="point in [...gameSession.selectedGame.points, 0]" :key="point" :value="point">
+                                        {{ point }}
+                                    </option>
+                                </select>
+                                <input v-else type="number" v-model.number="round.points[player.id] || 0" placeholder="Баллы">
                             </div>
                         </div>
-                        <div id = "round-buttons">
-                            <button @click="addRound(index)">+ Добавить раунд</button>
-                            <button @click="addCustomRounds(index)">+ Добавить несколько раундов</button>
-                            <button @click="removeRound(index)" :disabled="gameSession.rounds.length === 1">- Удалить раунд</button>
-                        </div>
+                    </div>
+                    <div id = "round-buttons">
+                        <button @click="addRound(index)">+ Добавить раунд</button>
+                        <button @click="addCustomRounds(index)">+ Добавить несколько раундов</button>
+                        <button @click="removeRound(index)" :disabled="gameSession.rounds.length === 1">- Удалить раунд</button>
                     </div>
                 </div>
-                <button @click="addGameSession" class="add-btn">+ Добавить игру</button>
             </div>
-
-            <!-- Отчёт -->
-            <div class="section">
-                <h2>Отчёт об играх</h2>
-                <textarea v-model.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal= "gameReport" rows="15" style="width: 100%; font-family: monospace;" readonly placeholder="Отчёт будет сгенерирован автоматически"></textarea>
-            </div>
-
-            <!-- Ссылка (для GitHub Pages) -->
-            <a href="#" id = "link-to-main">НА ГЛАВНУЮ</a> 
-
+            <button @click="addGameSession" class="add-btn">+ Добавить игру</button>
         </div>
+
+        <!-- Отчёт -->
+        <div class="section">
+            <h2>Отчёт об играх</h2>
+            <textarea v-model.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal.trimmed.literal= "gameReport" rows="15" style="width: 100%; font-family: monospace;" readonly placeholder="Отчёт будет сгенерирован автоматически"></textarea>
+        </div>
+
+        <!-- Ссылка (для GitHub Pages) -->
+        <a href="#" id = "link-to-main">НА ГЛАВНУЮ</a> 
+
     </div>
+</div>
 
-    <script>
-        const { createApp, ref, computed } = Vue;
+<script>
+    const { createApp, ref, computed } = Vue;
 
-        const games = [
-            // ... (весь список игр из твоего кода)
-            // Я оставил их без изменений, чтобы не раздувать ответ.
-            // Просто скопируй их отсюда или из своего файла.
-            {
-                name:"Путаница",
-                solo:false,
-                adults:true,
-                points:[7,3],
-                rounds:5
-            },
-            {
-                name:"Догонялки",
-                solo:false,
-                adults:false,
-                points:[7,3],
-                rounds:3
-            },
-             {
-                name:"Викторина",
-                solo:false,
-                adults:true,
-                points:[4,2],
-                rounds:5
-             },
-             {
-                 name:"Котячий патруль",
-                 solo:true,
-                 adults:true,
-                 points:[10,5],
-                 rounds:1
-             },
-             {
-                 name:"Поле чудес",
-                 solo:false,
-                 adults:true,
-                 points:[10,5],
-                 rounds:3
-             },
-             {
-                 name:"Липучки",
-                 solo:false,
-                 adults:false,
-                 points:[4,2],
-                 rounds:3
-             },
-             {
-                 name:"Составь слово",
-                 solo:false,
-                 adults:false,
-                 points:[4,2],
-                 rounds:5
-             },
-             {
-                 name:"Расшифруй",
-                 solo:true,
-                 adults:true,
-                 points:[4,2],
-                 rounds:5
-             },
-             {
-                 name:"Займи клетку",
-                 solo:false,
-                 adults:true,
-                 points:[5,3],
-                 rounds:5
-             },
-             {
-                 name:"Погоня",
-                 solo:false,
-                 adults:false,
-                 points:[5,3],
-                 rounds:3
-             },
-             {
-                 name:"Облом",
-                 solo:false,
-                 adults:false,
-                 points:[4,1],
-                 rounds:5
-             },
-             {
-                 name:"Лабиринт",
-                 solo:true,
-                 adults:true,
-                 points:[5,3,1],
-                 rounds:3
-             },
-             {
-                  name:"Охота на бабочек",
-                  solo:true,
-                  adults:false,
-                  points:[5,3],
-                  rounds:1
-              },
-              {
-                  name:"Три буквы",
-                  solo:false,
-                  adults:true,
-                  points:[3,1],
-                  rounds:5
-              },
-              {
-                  name:"Клановое имя",
-                  solo:true,
-                  adults:true,
-                  points:[5,3],
-                  rounds:5
-              },
-              {
-                  name:"Цель",
-                  solo:true,
-                  adults:false,
-                  points:[5,3,1],
-                  rounds:3
-              },
-              {
-                  name:"Словарик",
-                  solo:true,
-                  adults:false,
-                  points:[4],
-                  rounds:5
-              },
-              {
-                  name:"Песочница",
-                  solo:true,
-                  adults:true,
-                  points:[4],
-                  rounds:1
-              },
-              {
-                   name:"Три факта",
-                   solo:false,
-                   adults:true,
-                   points:[5,3],
-                   rounds:3
-               },
-               
+    const games = [
+        // ... (весь список игр из твоего кода)
+        // Я оставил их без изменений, чтобы не раздувать ответ.
+        // Просто скопируй их отсюда или из своего файла.
+        {
+            name:"Путаница",
+            solo:false,
+            adults:true,
+            points:[7,3],
+            rounds:5
+        },
+        {
+            name:"Догонялки",
+            solo:false,
+            adults:false,
+            points:[7,3],
+            rounds:3
+        },
+         {
+            name:"Викторина",
+            solo:false,
+            adults:true,
+            points:[4,2],
+            rounds:5
+         },
+         {
+             name:"Котячий патруль",
+             solo:true,
+             adults:true,
+             points:[10,5],
+             rounds:1
+         },
+         {
+             name:"Поле чудес",
+             solo:false,
+             adults:true,
+             points:[10,5],
+             rounds:3
+         },
+         {
+             name:"Липучки",
+             solo:false,
+             adults:false,
+             points:[4,2],
+             rounds:3
+         },
+         {
+             name:"Составь слово",
+             solo:false,
+             adults:false,
+             points:[4,2],
+             rounds:5
+         },
+         {
+             name:"Расшифруй",
+             solo:true,
+             adults:true,
+             points:[4,2],
+             rounds:5
+         },
+         {
+             name:"Займи клетку",
+             solo:false,
+             adults:true,
+             points:[5,3],
+             rounds:5
+         },
+         {
+             name:"Погоня",
+             solo:false,
+             adults:false,
+             points:[5,3],
+             rounds:3
+         },
+         {
+             name:"Облом",
+             solo:false,
+             adults:false,
+             points:[4,1],
+             rounds:5
+         },
+         {
+             name:"Лабиринт",
+             solo:true,
+             adults:true,
+             points:[5,3,1],
+             rounds:3
+         },
+         {
+              name:"Охота на бабочек",
+              solo:true,
+              adults:false,
+              points:[5,3],
+              rounds:1
+          },
+          {
+              name:"Три буквы",
+              solo:false,
+              adults:true,
+              points:[3,1],
+              rounds:5
+          },
+          {
+              name:"Клановое имя",
+              solo:true,
+              adults:true,
+              points:[5,3],
+              rounds:5
+          },
+          {
+              name:"Цель",
+              solo:true,
+              adults:false,
+              points:[5,3,1],
+              rounds:3
+          },
+          {
+              name:"Словарик",
+              solo:true,
+              adults:false,
+              points:[4],
+              rounds:5
+          },
+          {
+              name:"Песочница",
+              solo:true,
+              adults:true,
+              points:[4],
+              rounds:1
+          },
+          {
+               name:"Три факта",
+               solo:false,
+               adults:true,
+               points:[5,3],
+               rounds:3
+           },
+           {
